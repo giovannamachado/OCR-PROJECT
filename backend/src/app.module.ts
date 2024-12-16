@@ -1,13 +1,11 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { DocumentModule } from './document/document.module'; 
-import { MockAuthMiddleware } from './middlewares/auth.middleware'; 
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { GptService } from './gpt.service';  // Importando o GptService
+
 @Module({
-  imports: [DocumentModule], 
+  imports: [],
+  controllers: [AppController],
+  providers: [AppService, GptService],  // Registrando o GptService
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(MockAuthMiddleware) 
-      .forRoutes('*');   
-  }
-}
+export class AppModule {}

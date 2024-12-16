@@ -1,9 +1,11 @@
 import React from 'react';
+import AskQuestion from './components/AskQuestion';
 
 function App() {
   return (
-    <div className="App">
-      <h1>Funcionando!</h1>
+    <div>
+      <h1>Bem-vindo ao aplicativo de consulta de boletos!</h1>
+      <AskQuestion />
     </div>
   );
 }
