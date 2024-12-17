@@ -2,26 +2,22 @@ import { Controller, Get, Post, Body, UploadedFile, UseInterceptors } from '@nes
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { GptService } from './gpt.service';  // Importando o GptService
+import { GptService } from './gpt.service';
+
+const uploadedDocuments = [];
 
 @Controller()
 export class AppController {
   constructor(private readonly gptService: GptService) {}
 
-  @Get()
-  getHello(): string {
-    return 'Hello World!';
-  }
-
-  // Rota para upload do arquivo
   @Post('/upload')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads', // Pasta onde os arquivos serão salvos
+        destination: './uploads',
         filename: (req, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname); // Obtém a extensão do arquivo
+          const ext = extname(file.originalname);
           callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
         },
       }),
@@ -30,26 +26,35 @@ export class AppController {
   handleFileUpload(@UploadedFile() file: Express.Multer.File) {
     console.log('Arquivo recebido:', file);
 
-    // Aqui, você pode integrar uma lógica de OCR para extrair o conteúdo do boleto
-    // Simulando o conteúdo extraído para o exemplo
-    const extractedText = 'Exemplo de conteúdo extraído do boleto. Incluindo dados como valor, vencimento e pagador.';
-    
+    const extractedText = 'Texto extraído do boleto. Incluindo dados como valor, vencimento e pagador.';
+
+    const documentInfo = {
+      id: uploadedDocuments.length + 1,
+      fileName: file.originalname,
+      filePath: file.path,
+      extractedText,
+      interactions: [],
+    };
+    uploadedDocuments.push(documentInfo);
+
     return {
       message: 'Upload realizado com sucesso!',
-      filePath: file.path, // Caminho do arquivo salvo
-      fileName: file.filename,
-      extractedText,  // Retorna o conteúdo extraído do boleto
+      document: documentInfo,
     };
   }
 
-  // Rota para fazer perguntas
   @Post('/ask')
-  async askQuestion(@Body() body: { question: string, context: string }) {
+  async askQuestion(@Body() body: { question: string; context: string }) {
     const { question, context } = body;
-    
-    // Chama o serviço GPT-4 para responder a pergunta com base no contexto do boleto
+
+    // Envia a pergunta para a LLM e recebe a resposta
     const response = await this.gptService.askQuestion(question, context);
-    
+
     return { answer: response };
+  }
+
+  @Get('/documents')
+  getUploadedDocuments() {
+    return uploadedDocuments;
   }
 }
